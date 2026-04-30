@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamran Tahmooressi | Professional Portfolio</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712; 
+            --card-bg: rgba(17, 24, 39, 0.8);
+            --accent: #3b82f6;
+            --purple: #a855f7;
+            --text: #ffffff;
+            --text-dim: #9ca3af;
+            --border: rgba(59, 130, 246, 0.2);
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #0a192f 0%, #030712 100%);
+        }
+
+        /* Ticker + Scroll HUD */
+        .header-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .ticker-wrap {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+            height: 45px;
+            display: flex;
+            align-items: center;
+        }
+
+        .scroll-progress-container {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .scroll-progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--accent), var(--purple));
+            width: 0%;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .ticker {
+            display: flex;
+            white-space: nowrap;
+            animation: ticker 60s linear infinite;
+        }
+
+        .ticker:hover { animation-play-state: paused; }
+
+        .ticker-item {
+            padding: 0 50px;
+            color: var(--success);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .ticker-item:hover { color: var(--text); }
+
+        .ticker-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); }
+
+        @keyframes ticker {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 140px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 100px;
+        }
+
+        .hero-img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--accent);
+            margin-bottom: 24px;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+        }
+
+        h1 { font-size: 4rem; margin: 0; font-weight: 800; letter-spacing: -0.05em; }
+        .subtitle { color: var(--accent); font-weight: 600; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.25em; margin-top: 10px; }
+
+        section { margin-bottom: 120px; }
+        h2 { border-left: 5px solid var(--accent); padding-left: 20px; margin-bottom: 45px; font-size: 2rem; font-weight: 800; }
+
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 80px;
+        }
+
+        .badge-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .badge-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .badge-icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+        }
+
+        .badge-text h4 { margin: 0; font-size: 1.1rem; color: var(--text); }
+        .badge-text p { margin: 0; font-size: 0.9rem; color: var(--text-dim); }
+
+        .class-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .class-header {
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .class-content {
+            max-height: 0;
+            padding: 0 30px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-dim);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .class-box.active .class-content {
+            max-height: 600px;
+            padding-bottom: 30px;
+        }
+
+        .class-box.active { border-color: var(--accent); }
+
+        .exp-item {
+            margin-bottom: 60px;
+            padding-left: 30px;
+            border-left: 2px solid var(--border);
+            position: relative;
+        }
+
+        .exp-item::before {
+            content: '';
+            position: absolute;
+            left: -7px; top: 0;
+            width: 12px; height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        footer { text-align: center; padding: 80px; opacity: 0.6; font-size: 0.9rem; border-top: 1px solid var(--border); }
+    </style>
+</head>
+<body>
+    <div class="header-nav">
+        <div class="ticker-wrap">
+            <div class="ticker">
+                <a href="https://www.iea.org/news/tripling-renewable-capacity-by-2030-is-critical-to-keep-the-1-5-c-goal-within-reach" target="_blank" class="ticker-item"><div class="ticker-dot"></div> COP COMMITMENT: TRIPLING RENEWABLE CAPACITY BY 2030</a>
+                <a href="https://www.toyota.com.au/news/toyota-solid-state-battery-breakthrough" target="_blank" class="ticker-item"><div class="ticker-dot"></div> BREAKTHROUGH: SOLID-STATE BATTERIES TO REVOLUTIONIZE EV RANGE</a>
+                <a href="https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/" target="_blank" class="ticker-item"><div class="ticker-dot"></div> MICROSOFT: PLEDGE TO BE CARBON NEGATIVE BY 2030</a>
+                <a href="https://www.aboutamazon.com/news/transportation/amazon-rivian-electric-delivery-vans-10-000" target="_blank" class="ticker-item"><div class="ticker-dot"></div> AMAZON DEPLOYS 10,000TH RIVIAN ELECTRIC TRUCK GLOBALLY</a>
+                <a href="https://finance.ec.europa.eu/capital-markets-union-and-financial-services/sustainable-finance/corporate-sustainability-reporting-directive-csrd_en" target="_blank" class="ticker-item"><div class="ticker-dot"></div> EU CSRD: MANDATORY SUSTAINABILITY REPORTING STANDARDS TAKE EFFECT</a>
+                <a href="https://www.bloomberg.com/professional/blog/esg-assets-may-hit-53-trillion-by-2025-a-third-of-global-aum/" target="_blank" class="ticker-item"><div class="ticker-dot"></div> INVESTOR TREND: ESG ASSETS PROJECTED TO REACH $53 TRILLION</a>
+                {/* Repeat for seamless loop */}
+                <a href="https://www.iea.org/news/tripling-renewable-capacity-by-2030-is-critical-to-keep-the-1-5-c-goal-within-reach" target="_blank" class="ticker-item"><div class="ticker-dot"></div> COP COMMITMENT: TRIPLING RENEWABLE CAPACITY BY 2030</a>
+                <a href="https://www.toyota.com.au/news/toyota-solid-state-battery-breakthrough" target="_blank" class="ticker-item"><div class="ticker-dot"></div> BREAKTHROUGH: SOLID-STATE BATTERIES TO REVOLUTIONIZE EV RANGE</a>
+            </div>
+        </div>
+        <div class="scroll-progress-container">
+            <div id="scroll-bar" class="scroll-progress-bar"></div>
+        </div>
+    </div>
+
+    <canvas id="particle-canvas"></canvas>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const App = () => {
+            const [activeClass, setActiveClass] = useState(null);
+
+            useEffect(() => {
+                const canvas = document.getElementById('particle-canvas');
+                const ctx = canvas.getContext('2d');
+                let particles = [];
+                let animationId;
+
+                const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+                
+                class Particle {
+                    constructor() { this.init(); }
+                    init() {
+                        this.x = Math.random() * canvas.width;
+                        this.y = Math.random() * canvas.height;
+                        this.size = Math.random() * 2 + 0.5;
+                        this.speedX = Math.random() * 0.4 - 0.2;
+                        this.speedY = Math.random() * 0.4 - 0.2;
+                        this.alpha = Math.random() * 0.3 + 0.1;
+                    }
+                    update() {
+                        this.x += this.speedX; this.y += this.speedY;
+                        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                    }
+                    draw() {
+                        ctx.fillStyle = `rgba(168, 85, 247, ${this.alpha})`;
+                        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+
+                for(let i=0; i<80; i++) particles.push(new Particle());
+
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    particles.forEach(p => { p.update(); p.draw(); });
+                    animationId = requestAnimationFrame(animate);
+                };
+
+                const handleScroll = () => {
+                    const scrollBar = document.getElementById('scroll-bar');
+                    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrolled = (winScroll / height) * 100;
+                    if (scrollBar) scrollBar.style.width = scrolled + "%";
+                };
+
+                window.addEventListener('scroll', handleScroll);
+                window.addEventListener('resize', resize);
+                resize(); animate();
+                setTimeout(() => lucide.createIcons(), 200);
+
+                return () => {
+                    cancelAnimationFrame(animationId);
+                    window.removeEventListener('scroll', handleScroll);
+                    window.removeEventListener('resize', resize);
+                };
+            }, []);
+
+            const classes = [
+                {
+                    id: 'MGMT342',
+                    name: 'MGMT 342: Managing AI',
+                    text: 'Strategic AI integration in business. Developed this professional AI-architected portal using Gemini CLI and completed the high-stakes Gamma case study on AI implementation risks.'
+                },
+                {
+                    id: 'ECON305',
+                    name: 'ECON 305: Microeconomic Business Models',
+                    text: 'Applied microeconomic modeling to enterprise logistics. Analyzed Amazon’s delivery infrastructure transition to electric fleets and its long-term impact on operational scalability.'
+                },
+                {
+                    id: 'SUST401',
+                    name: 'SUST 401: Sustainability Continued Development',
+                    text: 'Advanced study of development concept models. Explored Banerjee’s frameworks and analyzed the evolution of company shareholder value towards holistic ESG alignment.'
+                }
+            ];
+
+            return (
+                <div className="container">
+                    <header>
+                        <img src="Suit Image.jpg" alt="Kamran" className="hero-img" />
+                        <h1>Kamran Tahmooressi</h1>
+                        <p className="subtitle">Economics, Sustainability, and Society</p>
+                    </header>
+
+                    <section>
+                        <h2>Specialized Domains</h2>
+                        <div className="badge-grid">
+                            <div className="badge-card">
+                                <div className="badge-icon"><i data-lucide="cpu"></i></div>
+                                <div className="badge-text">
+                                    <h4>AI Engineering</h4>
+                                    <p>Iterative Development & Prompting</p>
+                                </div>
+                            </div>
+                            <div className="badge-card">
+                                <div className="badge-icon"><i data-lucide="leaf"></i></div>
+                                <div className="badge-text">
+                                    <h4>Sustainability</h4>
+                                    <p>ESG & Carbon Neutrality</p>
+                                </div>
+                            </div>
+                            <div className="badge-card">
+                                <div className="badge-icon"><i data-lucide="trending-up"></i></div>
+                                <div className="badge-text">
+                                    <h4>Consulting</h4>
+                                    <p>Business Models & Strategy</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2>Coursework Portfolio</h2>
+                        {classes.map(cls => (
+                            <div key={cls.id} className={`class-box ${activeClass === cls.id ? 'active' : ''}`}>
+                                <div className="class-header" onClick={() => setActiveClass(activeClass === cls.id ? null : cls.id)}>
+                                    <span>{cls.name}</span>
+                                    <i data-lucide={activeClass === cls.id ? "minus" : "plus"} size="20"></i>
+                                </div>
+                                <div className="class-content"><p>{cls.text}</p></div>
+                            </div>
+                        ))}
+                    </section>
+
+                    <section>
+                        <h2>Career Trajectory</h2>
+                        <div className="exp-item">
+                            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                <h3 style={{margin: 0}}>ECOS Internship</h3>
+                                <span className="exp-date">March 2026 - Present</span>
+                            </div>
+                            <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>AGP Substrates</div>
+                            <p style={{color: 'var(--text-dim)'}}>Developed core business models and high-impact investor presentations, aligning technological capability with strategic growth initiatives.</p>
+                        </div>
+
+                        <div className="exp-item">
+                            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                <h3 style={{margin: 0}}>Ticket Operations Manager Intern</h3>
+                                <span className="exp-date">March 2026 - Present</span>
+                            </div>
+                            <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>Cincinnati Reds</div>
+                            <p style={{color: 'var(--text-dim)'}}>Coordinated high-volume ticket operations and fan engagement, maximizing customer value through operational efficiency.</p>
+                        </div>
+
+                        <div className="exp-item">
+                            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                <h3 style={{margin: 0}}>Auto Detailer</h3>
+                                <span className="exp-date">2024 - 2026</span>
+                            </div>
+                            <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>Fields BMW</div>
+                            <p style={{color: 'var(--text-dim)'}}>Managed distribution of 45+ vehicles, ensuring peak delivery condition and collaborating with sales teams.</p>
+                        </div>
+                    </section>
+
+                    <footer>
+                        Built Independently using Gemini CLI | Kamran Tahmooressi 2026
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
