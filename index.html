@@ -223,25 +223,6 @@
     </style>
 </head>
 <body>
-    <div class="header-nav">
-        <div class="ticker-wrap">
-            <div class="ticker">
-                <a href="https://www.iea.org/news/tripling-renewable-capacity-by-2030-is-critical-to-keep-the-1-5-c-goal-within-reach" target="_blank" class="ticker-item"><div class="ticker-dot"></div> COP COMMITMENT: TRIPLING RENEWABLE CAPACITY BY 2030</a>
-                <a href="https://www.toyota.com.au/news/toyota-solid-state-battery-breakthrough" target="_blank" class="ticker-item"><div class="ticker-dot"></div> BREAKTHROUGH: SOLID-STATE BATTERIES TO REVOLUTIONIZE EV RANGE</a>
-                <a href="https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/" target="_blank" class="ticker-item"><div class="ticker-dot"></div> MICROSOFT: PLEDGE TO BE CARBON NEGATIVE BY 2030</a>
-                <a href="https://www.aboutamazon.com/news/transportation/amazon-rivian-electric-delivery-vans-10-000" target="_blank" class="ticker-item"><div class="ticker-dot"></div> AMAZON DEPLOYS 10,000TH RIVIAN ELECTRIC TRUCK GLOBALLY</a>
-                <a href="https://finance.ec.europa.eu/capital-markets-union-and-financial-services/sustainable-finance/corporate-sustainability-reporting-directive-csrd_en" target="_blank" class="ticker-item"><div class="ticker-dot"></div> EU CSRD: MANDATORY SUSTAINABILITY REPORTING STANDARDS TAKE EFFECT</a>
-                <a href="https://www.bloomberg.com/professional/blog/esg-assets-may-hit-53-trillion-by-2025-a-third-of-global-aum/" target="_blank" class="ticker-item"><div class="ticker-dot"></div> INVESTOR TREND: ESG ASSETS PROJECTED TO REACH $53 TRILLION</a>
-                {/* Repeat for seamless loop */}
-                <a href="https://www.iea.org/news/tripling-renewable-capacity-by-2030-is-critical-to-keep-the-1-5-c-goal-within-reach" target="_blank" class="ticker-item"><div class="ticker-dot"></div> COP COMMITMENT: TRIPLING RENEWABLE CAPACITY BY 2030</a>
-                <a href="https://www.toyota.com.au/news/toyota-solid-state-battery-breakthrough" target="_blank" class="ticker-item"><div class="ticker-dot"></div> BREAKTHROUGH: SOLID-STATE BATTERIES TO REVOLUTIONIZE EV RANGE</a>
-            </div>
-        </div>
-        <div class="scroll-progress-container">
-            <div id="scroll-bar" class="scroll-progress-bar"></div>
-        </div>
-    </div>
-
     <canvas id="particle-canvas"></canvas>
     <div id="root"></div>
 
@@ -250,8 +231,35 @@
 
         const App = () => {
             const [activeClass, setActiveClass] = useState(null);
+            const [news, setNews] = useState([
+                { title: "WORLD RECORD: LONGI HIBC SOLAR CELLS HIT 28.13% EFFICIENCY", link: "https://www.renewable-energy-industry.com/news/longi-sets-new-world-record-efficiency-for-hibc-solar-cells" },
+                { title: "INNOVATION: SOLAR-DRIVEN METHOD CONVERTS PLASTIC WASTE TO HYDROGEN", link: "https://scitechdaily.com/plastic-to-fuel-breakthrough-solar-driven-photoreforming-innovation/" },
+                { title: "GENERAL MOTORS: 100% RENEWABLE ENERGY FOR ALL U.S. OPERATIONS", link: "https://www.esgtoday.com/gm-achieves-100-renewable-energy-target-for-u-s-operations/" },
+                { title: "RENEWABLE GAS: LANDFILL GAS CONVERTED TO RNG IN BRITISH COLUMBIA", link: "https://www.biomassmagazine.com/news/hydron-energy-launches-landfill-gas-to-rng-project" },
+                { title: "CARBON CAPTURE: STRATOS FACILITY RAMPS UP AS WORLD'S LARGEST DAC PLANT", link: "https://www.drhanak.com/ccs-turning-point-2026-stratos-facility-scale-up" },
+                { title: "POLICY: CALIFORNIA SB 253 MANDATORY EMISSIONS REPORTING COMMENCES", link: "https://www.breatheesg.com/california-sb253-mandatory-emissions-reporting-begins" }
+            ]);
 
             useEffect(() => {
+                // Fetch dynamic news
+                const fetchNews = async () => {
+                    try {
+                        const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dsite%3Asustainabilitymag.com%2BOR%2Bsite%3Aesgtoday.com%2BOR%2Bsite%3Aeco-business.com%26hl%3Den-US%26gl%3DUS%26ceid%3DUS%3Aen');
+                        const data = await response.json();
+                        if (data.status === 'ok' && data.items.length > 0) {
+                            const formattedNews = data.items.slice(0, 10).map(item => ({
+                                title: item.title.split(' - ')[0].toUpperCase(), // Clean up title and uppercase
+                                link: item.link
+                            }));
+                            setNews(formattedNews);
+                        }
+                    } catch (error) {
+                        console.error("Error fetching news:", error);
+                    }
+                };
+
+                fetchNews();
+                
                 const canvas = document.getElementById('particle-canvas');
                 const ctx = canvas.getContext('2d');
                 let particles = [];
@@ -327,12 +335,34 @@
             ];
 
             return (
-                <div className="container">
-                    <header>
-                        <img src="Suit Image.jpg" alt="Kamran" className="hero-img" />
-                        <h1>Kamran Tahmooressi</h1>
-                        <p className="subtitle">Economics, Sustainability, and Society</p>
-                    </header>
+                <div>
+                    <div className="header-nav">
+                        <div className="ticker-wrap">
+                            <div className="ticker">
+                                {news.map((item, index) => (
+                                    <a key={index} href={item.link} target="_blank" className="ticker-item">
+                                        <div className="ticker-dot"></div> {item.title}
+                                    </a>
+                                ))}
+                                {/* Repeat for seamless loop */}
+                                {news.map((item, index) => (
+                                    <a key={`loop-${index}`} href={item.link} target="_blank" className="ticker-item">
+                                        <div className="ticker-dot"></div> {item.title}
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="scroll-progress-container">
+                            <div id="scroll-bar" className="scroll-progress-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div className="container">
+                        <header>
+                            <img src="Suit Image.jpg" alt="Kamran" className="hero-img" />
+                            <h1>Kamran Tahmooressi</h1>
+                            <p className="subtitle">Economics, Sustainability, and Society</p>
+                        </header>
 
                     <section>
                         <h2>Specialized Domains</h2>
@@ -408,6 +438,7 @@
                         Built Independently using Gemini CLI | Kamran Tahmooressi 2026
                     </footer>
                 </div>
+            </div>
             );
         };
 
