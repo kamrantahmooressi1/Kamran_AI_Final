@@ -38,7 +38,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at center, #0a192f 0%, #030712 100%);
+            background: radial-gradient(circle at center, #0d1d31 0%, #030712 100%);
         }
 
         body::before {
@@ -47,8 +47,8 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             background-image: 
-                linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+                linear-gradient(rgba(168, 85, 247, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168, 85, 247, 0.08) 1px, transparent 1px);
             background-size: 50px 50px;
             z-index: -1;
             pointer-events: none;
@@ -131,7 +131,7 @@
             margin: 0 auto;
             padding: 140px 20px;
             position: relative;
-            z-index: 1;
+            z-index: 10;
         }
 
         header {
@@ -271,7 +271,7 @@
                         const data = await response.json();
                         if (data.status === 'ok' && data.items.length > 0) {
                             const formattedNews = data.items.slice(0, 10).map(item => ({
-                                title: item.title.split(' - ')[0].toUpperCase(), // Clean up title and uppercase
+                                title: item.title.split(' - ')[0].toUpperCase(),
                                 link: item.link
                             }));
                             setNews(formattedNews);
@@ -285,11 +285,82 @@
                 
                 const canvas = document.getElementById('particle-canvas');
                 const ctx = canvas.getContext('2d');
+                let points = [];
+                let meshPulses = [];
                 let particles = [];
+                let shapes = [];
                 let animationId;
 
-                const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-                
+                const resize = () => { 
+                    canvas.width = window.innerWidth; 
+                    canvas.height = window.innerHeight; 
+                    initMesh();
+                };
+
+                const initMesh = () => {
+                    points = [];
+                    meshPulses = [];
+                    const spacing = 150;
+                    const rows = Math.ceil(canvas.height / spacing) + 1;
+                    const cols = Math.ceil(canvas.width / spacing) + 1;
+
+                    for (let y = 0; y < rows; y++) {
+                        for (let x = 0; x < cols; x++) {
+                            points.push({
+                                x: x * spacing + (Math.random() - 0.5) * spacing * 0.7,
+                                y: y * spacing + (Math.random() - 0.5) * spacing * 0.7,
+                                neighbors: []
+                            });
+                        }
+                    }
+
+                    // Connect points to form triangles
+                    for (let i = 0; i < points.length; i++) {
+                        for (let j = i + 1; j < points.length; j++) {
+                            const dist = Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y);
+                            if (dist < spacing * 1.6) {
+                                points[i].neighbors.push(points[j]);
+                                points[j].neighbors.push(points[i]);
+                            }
+                        }
+                    }
+
+                    for (let i = 0; i < 20; i++) meshPulses.push(new MeshPulse());
+                };
+
+                class MeshPulse {
+                    constructor() { this.init(); }
+                    init() {
+                        this.currentPoint = points[Math.floor(Math.random() * points.length)];
+                        this.targetPoint = this.currentPoint.neighbors[Math.floor(Math.random() * this.currentPoint.neighbors.length)];
+                        this.progress = 0;
+                        this.speed = Math.random() * 0.015 + 0.005;
+                    }
+                    update() {
+                        if (!this.targetPoint) { this.init(); return; }
+                        this.progress += this.speed;
+                        if (this.progress >= 1) {
+                            this.currentPoint = this.targetPoint;
+                            this.targetPoint = this.currentPoint.neighbors[Math.floor(Math.random() * this.currentPoint.neighbors.length)];
+                            this.progress = 0;
+                        }
+                    }
+                    draw() {
+                        if (!this.targetPoint) return;
+                        const x = this.currentPoint.x + (this.targetPoint.x - this.currentPoint.x) * this.progress;
+                        const y = this.currentPoint.y + (this.targetPoint.y - this.currentPoint.y) * this.progress;
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = '#a855f7';
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = '#a855f7';
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
                 class Shape {
                     constructor() { this.init(); }
                     init() {
@@ -299,7 +370,7 @@
                         this.speedX = Math.random() * 0.2 - 0.1;
                         this.speedY = Math.random() * 0.2 - 0.1;
                         this.alpha = Math.random() * 0.2 + 0.05;
-                        this.type = Math.floor(Math.random() * 3); // 0: circle, 1: square, 2: triangle
+                        this.type = Math.floor(Math.random() * 3);
                         this.rotation = Math.random() * Math.PI * 2;
                         this.rotSpeed = Math.random() * 0.01 - 0.005;
                     }
@@ -320,11 +391,9 @@
                         ctx.shadowBlur = 10;
                         ctx.shadowColor = '#a855f7';
                         ctx.beginPath();
-                        if (this.type === 0) {
-                            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-                        } else if (this.type === 1) {
-                            ctx.rect(-this.size/2, -this.size/2, this.size, this.size);
-                        } else {
+                        if (this.type === 0) ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                        else if (this.type === 1) ctx.rect(-this.size/2, -this.size/2, this.size, this.size);
+                        else {
                             ctx.moveTo(0, -this.size/2);
                             ctx.lineTo(this.size/2, this.size/2);
                             ctx.lineTo(-this.size/2, this.size/2);
@@ -357,11 +426,27 @@
                 }
 
                 for(let i=0; i<80; i++) particles.push(new Particle());
-                for(let i=0; i<15; i++) particles.push(new Shape());
+                for(let i=0; i<15; i++) shapes.push(new Shape());
 
                 const animate = () => {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw Mesh Lines
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(168, 85, 247, 0.15)';
+                    ctx.lineWidth = 1;
+                    points.forEach(p => {
+                        p.neighbors.forEach(n => {
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(n.x, n.y);
+                        });
+                    });
+                    ctx.stroke();
+
+                    meshPulses.forEach(p => { p.update(); p.draw(); });
                     particles.forEach(p => { p.update(); p.draw(); });
+                    shapes.forEach(s => { s.update(); s.draw(); });
+                    
                     animationId = requestAnimationFrame(animate);
                 };
 
@@ -386,21 +471,9 @@
             }, []);
 
             const classes = [
-                {
-                    id: 'MGMT342',
-                    name: 'MGMT 342: Managing AI',
-                    text: 'Strategic AI integration in business. Developed this professional AI-architected portal using Gemini CLI and completed the high-stakes Gamma case study on AI implementation risks.'
-                },
-                {
-                    id: 'ECON305',
-                    name: 'ECON 305: Microeconomic Business Models',
-                    text: 'Applied microeconomic modeling to enterprise logistics. Analyzed Amazon’s delivery infrastructure transition to electric fleets and its long-term impact on operational scalability.'
-                },
-                {
-                    id: 'SUST401',
-                    name: 'SUST 401: Sustainability Continued Development',
-                    text: 'Advanced study of development concept models. Explored Banerjee’s frameworks and analyzed the evolution of company shareholder value towards holistic ESG alignment.'
-                }
+                { id: 'MGMT342', name: 'MGMT 342: Managing AI', text: 'Strategic AI integration in business. Developed this professional AI-architected portal using Gemini CLI and completed the high-stakes Gamma case study on AI implementation risks.' },
+                { id: 'ECON305', name: 'ECON 305: Microeconomic Business Models', text: 'Applied microeconomic modeling to enterprise logistics. Analyzed Amazon’s delivery infrastructure transition to electric fleets and its long-term impact on operational scalability.' },
+                { id: 'SUST401', name: 'SUST 401: Sustainability Continued Development', text: 'Advanced study of development concept models. Explored Banerjee’s frameworks and analyzed the evolution of company shareholder value towards holistic ESG alignment.' }
             ];
 
             return (
@@ -413,7 +486,6 @@
                                         <div className="ticker-dot"></div> {item.title}
                                     </a>
                                 ))}
-                                {/* Repeat for seamless loop */}
                                 {news.map((item, index) => (
                                     <a key={`loop-${index}`} href={item.link} target="_blank" className="ticker-item">
                                         <div className="ticker-dot"></div> {item.title}
@@ -433,81 +505,81 @@
                             <p className="subtitle">Economics, Sustainability, and Society</p>
                         </header>
 
-                    <section>
-                        <h2>Specialized Domains</h2>
-                        <div className="badge-grid">
-                            <div className="badge-card">
-                                <div className="badge-icon"><i data-lucide="cpu"></i></div>
-                                <div className="badge-text">
-                                    <h4>AI Engineering</h4>
-                                    <p>Iterative Development & Prompting</p>
+                        <section>
+                            <h2>Specialized Domains</h2>
+                            <div className="badge-grid">
+                                <div className="badge-card">
+                                    <div className="badge-icon"><i data-lucide="cpu"></i></div>
+                                    <div className="badge-text">
+                                        <h4>AI Engineering</h4>
+                                        <p>Iterative Development & Prompting</p>
+                                    </div>
+                                </div>
+                                <div className="badge-card">
+                                    <div className="badge-icon"><i data-lucide="leaf"></i></div>
+                                    <div className="badge-text">
+                                        <h4>Sustainability</h4>
+                                        <p>ESG & Carbon Neutrality</p>
+                                    </div>
+                                </div>
+                                <div className="badge-card">
+                                    <div className="badge-icon"><i data-lucide="trending-up"></i></div>
+                                    <div className="badge-text">
+                                        <h4>Consulting</h4>
+                                        <p>Business Models & Strategy</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="badge-card">
-                                <div className="badge-icon"><i data-lucide="leaf"></i></div>
-                                <div className="badge-text">
-                                    <h4>Sustainability</h4>
-                                    <p>ESG & Carbon Neutrality</p>
+                        </section>
+
+                        <section>
+                            <h2>Coursework Portfolio</h2>
+                            {classes.map(cls => (
+                                <div key={cls.id} className={`class-box ${activeClass === cls.id ? 'active' : ''}`}>
+                                    <div className="class-header" onClick={() => setActiveClass(activeClass === cls.id ? null : cls.id)}>
+                                        <span>{cls.name}</span>
+                                        <i data-lucide={activeClass === cls.id ? "minus" : "plus"} size="20"></i>
+                                    </div>
+                                    <div className="class-content"><p>{cls.text}</p></div>
                                 </div>
-                            </div>
-                            <div className="badge-card">
-                                <div className="badge-icon"><i data-lucide="trending-up"></i></div>
-                                <div className="badge-text">
-                                    <h4>Consulting</h4>
-                                    <p>Business Models & Strategy</p>
+                            ))}
+                        </section>
+
+                        <section>
+                            <h2>Career Trajectory</h2>
+                            <div className="exp-item">
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <h3 style={{margin: 0}}>ECOS Internship</h3>
+                                    <span className="exp-date">March 2026 - Present</span>
                                 </div>
+                                <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>AGP Substrates</div>
+                                <p style={{color: 'var(--text-dim)'}}>Developed core business models and high-impact investor presentations, aligning technological capability with strategic growth initiatives.</p>
                             </div>
-                        </div>
-                    </section>
 
-                    <section>
-                        <h2>Coursework Portfolio</h2>
-                        {classes.map(cls => (
-                            <div key={cls.id} className={`class-box ${activeClass === cls.id ? 'active' : ''}`}>
-                                <div className="class-header" onClick={() => setActiveClass(activeClass === cls.id ? null : cls.id)}>
-                                    <span>{cls.name}</span>
-                                    <i data-lucide={activeClass === cls.id ? "minus" : "plus"} size="20"></i>
+                            <div className="exp-item">
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <h3 style={{margin: 0}}>Ticket Operations Manager Intern</h3>
+                                    <span className="exp-date">March 2026 - Present</span>
                                 </div>
-                                <div className="class-content"><p>{cls.text}</p></div>
+                                <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>Cincinnati Reds</div>
+                                <p style={{color: 'var(--text-dim)'}}>Coordinated high-volume ticket operations and fan engagement, maximizing customer value through operational efficiency.</p>
                             </div>
-                        ))}
-                    </section>
 
-                    <section>
-                        <h2>Career Trajectory</h2>
-                        <div className="exp-item">
-                            <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                                <h3 style={{margin: 0}}>ECOS Internship</h3>
-                                <span className="exp-date">March 2026 - Present</span>
+                            <div className="exp-item">
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <h3 style={{margin: 0}}>Auto Detailer</h3>
+                                    <span className="exp-date">2024 - 2026</span>
+                                </div>
+                                <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>Fields BMW</div>
+                                <p style={{color: 'var(--text-dim)'}}>Managed distribution of 45+ vehicles, ensuring peak delivery condition and collaborating with sales teams.</p>
                             </div>
-                            <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>AGP Substrates</div>
-                            <p style={{color: 'var(--text-dim)'}}>Developed core business models and high-impact investor presentations, aligning technological capability with strategic growth initiatives.</p>
-                        </div>
+                        </section>
 
-                        <div className="exp-item">
-                            <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                                <h3 style={{margin: 0}}>Ticket Operations Manager Intern</h3>
-                                <span className="exp-date">March 2026 - Present</span>
-                            </div>
-                            <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>Cincinnati Reds</div>
-                            <p style={{color: 'var(--text-dim)'}}>Coordinated high-volume ticket operations and fan engagement, maximizing customer value through operational efficiency.</p>
-                        </div>
-
-                        <div className="exp-item">
-                            <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                                <h3 style={{margin: 0}}>Auto Detailer</h3>
-                                <span className="exp-date">2024 - 2026</span>
-                            </div>
-                            <div style={{color: 'var(--accent)', fontWeight: 600, margin: '5px 0'}}>Fields BMW</div>
-                            <p style={{color: 'var(--text-dim)'}}>Managed distribution of 45+ vehicles, ensuring peak delivery condition and collaborating with sales teams.</p>
-                        </div>
-                    </section>
-
-                    <footer>
-                        Built Independently using Gemini CLI | Kamran Tahmooressi 2026
-                    </footer>
+                        <footer>
+                            Built Independently using Gemini CLI | Kamran Tahmooressi 2026
+                        </footer>
+                    </div>
                 </div>
-            </div>
             );
         };
 
